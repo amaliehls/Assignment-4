@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 setwd("~/Desktop/R Saves Semester 3/Assignment 4")
-library(crqa); library(tseriesChaos); library(nonlinearTseries); library(SparseM); library(lme4); library(dplyr); library(lmerTest); library(MuMIn): library(caret); library(pROC); library(groupdata2); library(ggplot2); library(gridExtra)
+library(crqa); library(tseriesChaos); library(nonlinearTseries); library(SparseM); library(lme4); library(dplyr); library(lmerTest); library(MuMIn); library(caret); library(pROC); library(groupdata2); library(ggplot2); library(gridExtra)
 ```
 
 ```{r}
@@ -54,7 +54,7 @@ N.B. to give you a bit more data I included data from last year (Study1) and fro
 ```{r}
 #Downsampling
 conv = conv %>%
-    group(n = 100, method = 'greedy') %>%
+    groupdata2::group(n = 100, method = 'greedy') %>%
     dplyr::summarise(
        time = mean(time,na.rm=T),
        HR1 = mean(HR1,na.rm=T),
@@ -145,10 +145,86 @@ turn$HR2=scale(turn$HR2)
 ```
 
 ```{r}
+setwd("~/Desktop/R Saves Semester 3/Assignment 4/CleanData")
+removeOuts <- function(ts,threshold){
+   ts[ts > (mean(ts,na.rm=T) +  
+           (threshold*sd(ts,na.rm=T))) | 
+        ts < (mean(ts,na.rm=T) -
+           (threshold*sd(ts,na.rm=T)))] = mean(ts,na.rm=T)  
+return(ts)}
+
+threshold=2.5
+
+files = list.files(path =".")
+
+n = 1
+
+for (i in files){
+
+df = read.csv(i)
+
+df = df %>%
+    groupdata2::group(n = 100, method = 'greedy') %>%
+    dplyr::summarise(
+       time = mean(time,na.rm=T),
+       HR1 = mean(HR1,na.rm=T),
+       HR2 = mean(HR2,na.rm=T),
+       Resp1 = mean(Resp1,na.rm=T),
+       Resp2 = mean(Resp2,na.rm=T))
+
+df$HR1=removeOuts(df$HR1,threshold)
+df$HR2=removeOuts(df$HR2,threshold)
+df$Resp1=removeOuts(df$Resp1,threshold)
+df$Resp2=removeOuts(df$Resp2,threshold)
+
+df$Resp1=scale(df$Resp1)  
+df$Resp2=scale(df$Resp2)  
+df$HR1=scale(df$HR1)
+df$HR2=scale(df$HR2)
+
+setwd("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data")
+write.csv(df, file=i)
+setwd("~/Desktop/R Saves Semester 3/Assignment 4/CleanData")
+
+
+}
+
+n = n+1
+
+
+
+```
+
+```{r}
+setwd("~/Desktop/R Saves Semester 3/Assignment 4")
+files_preproc = list.files(path="Preproc_data")
+
+files_group1 = list.files(path ="Preproc_data/",pattern = "G1")
+files_group2 = list.files(path ="Preproc_data/",pattern = "G2")
+files_group3 = list.files(path ="Preproc_data/",pattern = "G3")
+files_group4 = list.files(path ="Preproc_data/",pattern = "G4")
+files_group5 = list.files(path ="Preproc_data/",pattern = "G5")
+files_group6 = list.files(path ="Preproc_data/",pattern = "G6")
+files_group7 = list.files(path ="Preproc_data/",pattern = "G7")
+files_group8 = list.files(path ="Preproc_data/",pattern = "G8")
+files_group9 = list.files(path ="Preproc_data/",pattern = "G9")
+files_group10 = list.files(path ="Preproc_data/",pattern = "G10")
+
+```
+
+```{r}
+Study = NULL
+Group = NULL
+Trial = NULL
+Condition = NULL
+```
+
+
+```{r}
 #Radiusspan?
 par = list(lgM =  50, steps = seq(1, 6, 1),  radiusspan = 100,  radiussample = 40, normalize = 0,  rescale = 0,  mindiagline = 2,  minvertline = 2,  tw = 0,  whiteline = FALSE,  recpt = FALSE,  fnnpercent = 10,  typeami = "mindip")
   
-parameters = try(optimizeParam(conv$Resp1, conv$Resp2, par, min.rec = 3.5, max.rec = 4.5))
+parameters = try(optimizeParam(conv$HR1, conv$HR2, par, min.rec = 3.5, max.rec = 4.5))
 
 results = crqa (conv$Resp1, conv$Resp2, delay=parameters$delay, embed=parameters$emddim, radius=parameters$radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
 
