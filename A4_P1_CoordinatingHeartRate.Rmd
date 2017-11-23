@@ -9,10 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 setwd("~/Desktop/R Saves Semester 3/Assignment 4")
 library(crqa); library(tseriesChaos); library(nonlinearTseries); library(SparseM); library(lme4); library(dplyr); library(lmerTest); library(MuMIn); library(caret); library(pROC); library(groupdata2); library(ggplot2); library(gridExtra)
+library(stringr)
 ```
 
 ```{r}
-#Choose one pair - study 2 group 8 and load the data
+#Choose one pair - group 8 and load the data
 turn = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/CleanData/Study2_G8_T1_TurnTaking.csv")
 
 sync = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/CleanData/Study2_G8_T2_Synchronous.csv")
@@ -148,7 +149,78 @@ turn$HR2=scale(turn$HR2)
 - Loop through all the files (either with a loop or with a function), check which files should be excluded, if any, and save the pre-processed time-series. Tip: plot and visually inspect the data to figure out which should be excluded.
 
 ```{r}
-setwd("~/Desktop/R Saves Semester 3/Assignment 4/CleanData")
+#Plots to see which should be excluded (group 1 and 2 at least for respiration data)
+
+sync1 <- read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study1_G1_T1_Synchronous.csv")
+
+turn1 <- read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study1_G1_T2_TurnTaking.csv")
+
+turn2 = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study1_G2_T1_TurnTaking.csv")
+
+sync2 = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study1_G2_T2_Synchronous.csv")
+
+turn3 = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study1_G3_T2_TurnTaking.csv")
+
+sync3 = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study1_G3_T3_Synchronous.csv")
+
+
+#Plots for respiration
+respsync1 = ggplot(sync1,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respsync1")
+
+respturn1 = ggplot(turn1,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respturn1")
+
+respsync2 = ggplot(sync2,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respsync2")
+
+respturn2 = ggplot(turn2,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respturn2")
+
+respsync3 = ggplot(sync3,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respsync3")
+
+respturn3 = ggplot(turn3,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respturn3")
+
+
+#Plots for HR
+hrsync1 = ggplot(sync1,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrsync1")
+
+hrturn1 = ggplot(turn1,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrturn1")
+
+hrsync2 = ggplot(sync2,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrsync2")
+
+hrturn2 = ggplot(turn2,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrturn2")
+
+hrsync3 = ggplot(sync3,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrsync3")
+
+hrturn3 = ggplot(turn3,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrturn3")
+
+#Show the plots together
+group1 = grid.arrange(respsync1, respturn1, hrsync1, hrturn1, ncol=3)
+group2 = grid.arrange(respsync2, respturn2, hrsync2, hrturn2, ncol=3)
+group3 = grid.arrange(respsync3, respturn3, hrsync3, hrturn3, ncol=3)
+
+#More plots ....
+conv7 = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study2_G7_T1_Conversation.csv")
+
+sync7 = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study2_G7_T2_Synchronous.csv")
+
+turn7 = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study2_G7_T3_TurnTaking.csv")
+
+respconv7 = ggplot(conv7,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respconv7")
+
+respsync7 = ggplot(sync7,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respsync7")
+
+respturn7 = ggplot(turn7,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respturn7")
+
+
+HRconv7 = ggplot(conv7,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="HRconv7")
+
+HRsync7 = ggplot(sync7,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="HRsync7")
+
+HRturn7 = ggplot(turn7,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="HRturn7")
+
+group7 = grid.arrange(respconv7, respsync7, respturn7,HRconv7, HRsync7, HRturn7,ncol=3)
+```
+
+
+```{r}
 removeOuts <- function(ts,threshold){
    ts[ts > (mean(ts,na.rm=T) +  
            (threshold*sd(ts,na.rm=T))) | 
@@ -158,7 +230,7 @@ return(ts)}
 
 threshold=2.5
 
-files = list.files(path =".")
+files = list.files(path = "~/Desktop/R Saves Semester 3/Assignment 4",pattern = "Study")
 
 n = 1
 
@@ -167,7 +239,7 @@ for (i in files){
 df = read.csv(i)
 
 df = df %>%
-    groupdata2::group(n = 100, method = 'greedy') %>%
+    group(n = 100, method = 'greedy') %>%
     dplyr::summarise(
        time = mean(time,na.rm=T),
        HR1 = mean(HR1,na.rm=T),
@@ -187,21 +259,7 @@ df$HR2=scale(df$HR2)
 
 setwd("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data")
 write.csv(df, file=i)
-
-
-
-
-setwd("~/Desktop/R Saves Semester 3/Assignment 4/Plots")
-
-#resp = ggplot(conv,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respconv")
-
-#hr = ggplot(conv,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrconv")
-
-
-#jpeg(file="~/Desktop/R Saves Semester 3/Assignment 4/Plots/myplot.jpeg")
-#plot(ggplot(conv,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respconv"))
-#paste("myplot_",i,".jpeg",sep=""")
-#dev.off()
+setwd("~/Desktop/R Saves Semester 3/Assignment 4")
 
 }
 
@@ -273,7 +331,7 @@ for (i in files_preproc) {
 ```
 
 ```{r}
-#Use the few that worked to find optimal parameters, + in radius is an attempt to reach an RR of about 4%
+#Use the few that worked to find optimal parameters
 resp_delay = median(basic_df$respDelay,na.rm = TRUE)
 resp_embed = median(basic_df$respEmbed,na.rm = TRUE)
 resp_radius = median(basic_df$respRadius,na.rm = TRUE)
@@ -301,14 +359,18 @@ n=1
 for (i in files_preproc) {
   
   study[n] = substr(i,6,6)
-  group[n] = substr(i,9,9)
-  trial[n] = substr(i,12,12)
-  condition[n] = substr(i,14,17)
+  group_temp = str_extract(i, "G\\d+")
+  group[n] = str_extract(group_temp, "\\d")
+  trial_temp = str_extract(i, "T\\d")
+  trial[n] = str_extract(trial_temp, "\\d")
+  condition_temp = str_extract(i, c("Turn", "Conv", "Sync"))
+  condition[n] = na.omit(condition_temp)
+  
   
   df = read.csv(i)
-  results_resp = crqa (df$Resp1, conv$Resp2, delay=resp_delay, embed=resp_embed, radius=resp_radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
+  results_resp = crqa (df$Resp1, df$Resp2, delay=resp_delay, embed=resp_embed, radius=resp_radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
 
-  results_HR = crqa (df$HR1, conv$HR2, delay=HR_delay, embed=HR_embed, radius=HR_radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
+  results_HR = crqa (df$HR1, df$HR2, delay=HR_delay, embed=HR_embed, radius=HR_radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
   
   df <- data.frame(study = study[n], group = group[n], trial = trial[n], condition = condition[n], resp_RR = results_resp$RR, resp_DET = results_resp$DET, resp_NRLINE = results_resp$NRLINE, resp_maxL = results_resp$maxL, resp_L = results_resp$L, resp_ENTR = results_resp$ENTR, resp_rENTR = results_resp$rENTR, resp_LAM = results_resp$LAM, resp_TT = results_resp$TT, HR_RR = results_HR$RR, HR_DET = results_HR$DET, HR_NRLINE = results_HR$NRLINE, HR_maxL = results_HR$maxL, HR_L = results_HR$L, HR_ENTR = results_HR$ENTR, HR_rENTR = results_HR$rENTR, HR_LAM = results_HR$LAM, HR_TT = results_HR$TT)
   
@@ -321,37 +383,10 @@ for (i in files_preproc) {
   n = n + 1
   }
 }
-  
+
+write.csv(final_df, file = "final_df")
 
 ```
-
-```{r}
-#Plots
-
-sync1 <- read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study1_G1_T1_Synchronous.csv")
-
-turn1 <- read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/Study1_G1_T2_TurnTaking.csv")
-
-
-#Plots for respiration
-respsync1 = ggplot(sync1,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respsync1")
-
-respturn1 = ggplot(turn1,aes(time,Resp1))+geom_line()+geom_line(aes(time,Resp2),color="blue")+labs(title="respturn1")
-
-#Plots for HR
-hrsync1 = ggplot(sync1,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrsync1")
-
-hrturn1 = ggplot(sync1,aes(time,HR1))+geom_line()+geom_line(aes(time,HR2),color="blue")+labs(title="hrturn1")
-
-#Show the plots together
-group1 = grid.arrange(respsync1, respturn1, hrsync1, hrturn1, ncol=3)
-
-
-
-```
-
-
-
 
 ### Creating controls: shuffled controls
  - loop through all pairs and conditions
@@ -360,7 +395,55 @@ group1 = grid.arrange(respsync1, respturn1, hrsync1, hrturn1, ncol=3)
  - statistically compare the crqa indexes in real and shuffled pairs
  
 ```{r}
+#Loop with shuffled files
 
+setwd("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data")
+files_preproc = list.files(path=".")
+
+shuffle_df = NULL
+
+study = NULL
+group = NULL
+trial = NULL
+condition = NULL
+
+n = 1
+
+for (i in files_preproc) {
+  
+  study[n] = substr(i,6,6)
+  group_temp = str_extract(i, "G\\d+")
+  group[n] = str_extract(group_temp, "\\d")
+  trial_temp = str_extract(i, "T\\d")
+  trial[n] = str_extract(trial_temp, "\\d")
+  condition_temp = str_extract(i, c("Turn", "Conv", "Sync"))
+  condition[n] = na.omit(condition_temp)
+  
+  df = read.csv(i)
+  
+  df$HR1 <- sample(df$HR1)
+  df$HR2 <- sample(df$HR2)
+  df$Resp1 <- sample(df$Resp1)
+  df$Resp1 <- sample(df$Resp2)
+  
+  
+  results_resp = crqa (df$Resp1, df$Resp2, delay=resp_delay, embed=resp_embed, radius=resp_radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
+
+  results_HR = crqa (df$HR1, df$HR2, delay=HR_delay, embed=HR_embed, radius=HR_radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
+  
+  df <- data.frame(study = study[n], group = group[n], trial = trial[n], condition = condition[n], resp_RR = results_resp$RR, resp_DET = results_resp$DET, resp_NRLINE = results_resp$NRLINE, resp_maxL = results_resp$maxL, resp_L = results_resp$L, resp_ENTR = results_resp$ENTR, resp_rENTR = results_resp$rENTR, resp_LAM = results_resp$LAM, resp_TT = results_resp$TT, HR_RR = results_HR$RR, HR_DET = results_HR$DET, HR_NRLINE = results_HR$NRLINE, HR_maxL = results_HR$maxL, HR_L = results_HR$L, HR_ENTR = results_HR$ENTR, HR_rENTR = results_HR$rENTR, HR_LAM = results_HR$LAM, HR_TT = results_HR$TT)
+  
+ if (exists("shuffle_df")) {
+    shuffle_df = rbind(shuffle_df, df)
+  } 
+  else {
+    shuffle_df = df
+    
+  n = n + 1
+  }
+}
+
+write.csv(shuffle_df, file = "shuffle_df")
 ```
 
 ### TRICKY! Creating controls: surrogate pair controls
