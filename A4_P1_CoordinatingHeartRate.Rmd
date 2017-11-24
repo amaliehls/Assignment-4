@@ -368,6 +368,7 @@ for (i in files_preproc) {
   
   
   df = read.csv(i)
+  
   results_resp = crqa (df$Resp1, df$Resp2, delay=resp_delay, embed=resp_embed, radius=resp_radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
 
   results_HR = crqa (df$HR1, df$HR2, delay=HR_delay, embed=HR_embed, radius=HR_radius,normalize=0,rescale=0,mindiagline = 2,minvertline = 2)
@@ -525,8 +526,26 @@ for (co in c("Synchronous","TurnTaking")){ #loop through a list of condintions
  - N.B: would it make sense to include surrogate pairs? and if so how? what would that tell you?
  
 ```{r}
+shuffle_df$typePairs <- "shuffled" 
+final_df$typePairs <- "real"
 
-```
+
+shuffle_final_df <- rbind(final_df, shuffle_df)
+
+
+resp_box <- ggplot(shuffle_final_df, aes(shuffle_final_df$typePairs, shuffle_final_df$resp_L)) + geom_point() + geom_boxplot() + labs(title = "Respiration data")
+
+HR_box <- ggplot(shuffle_final_df, aes(shuffle_final_df$typePairs, shuffle_final_df$HR_L)) + geom_point() + geom_boxplot() + labs(title = "Heart rate data")
+
+grid.arrange(resp_box,HR_box, ncol = 2)
+
+cond_resp = ggplot(final_df, aes(x = final_df$condition, y = final_df$resp_L)) + geom_point() + geom_boxplot()+ labs(title = "Respiration data")
+
+
+cond_HR = ggplot(final_df, aes(x = final_df$condition, y = final_df$HR_L)) + geom_point() + geom_boxplot()+labs(title = "Heart rate data")
+
+
+grid.arrange(cond_resp,cond_HR, ncol = 2)
 
 ### Effects of respiration coordination on heart rate coordination
  - describe how you would test those.
