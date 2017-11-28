@@ -462,12 +462,15 @@ num=str_extract_all(prepro_filelist, "\\d+") #extract all numbers in the file na
 df= as.data.frame(t(as.data.frame(num))) #create a transposed (i.e. "tipped") dataframe of these number
 rownames(df)<-NULL #Remove rownames.
 
-pairs=as.numeric(unique(df$V2)) #create pairs, i.e. unique group numbers
+pairs=as.numeric(unique(as.numeric(as.character(df$V2)))) #create pairs, i.e. unique group numbers
 
 SurrogateList <- expand.grid(a = pairs, b = pairs) # expand.grid combines all possible combinations of a given vector
 SurrogateList = subset(SurrogateList, a != b) # Ensure that pair 1 (i.e group1) doesn't get paired with it self.
 
-
+#!# temp info
+#co = "Synchronous"
+#i = 1
+ 
 # Per each condition
 for (co in c("Synchronous","TurnTaking")){ #loop through a list of condintions 
   for (i in 1:nrow(SurrogateList)){ #and loop through all the pairings of the surrogate list
@@ -493,14 +496,14 @@ for (co in c("Synchronous","TurnTaking")){ #loop through a list of condintions
   #creation of surrogate files. (Riccardo's idea of having fun and completely overdoing it ;-) ) 
   #per each 2 pairs there are 4 possible surrogate pairs: 
   #pair1person1 w pair2person2; 
-  d3=data.frame(Resp1=d1$Resp1,Resp2=d2$Resp2,HR1=d1$HR1,HR2=d2$HR2,Resp1S=d1$Resp1S,Resp2S=d2$Resp2S,HR1S=d1$HR1S,HR2S=d2$HR2S)
+  d3=data.frame(Resp1=d1$Resp1,Resp2=d2$Resp2,HR1=d1$HR1,HR2=d2$HR2,Resp1S=d1$Resp1,Resp2S=d2$Resp2,HR1S=d1$HR1,HR2S=d2$HR2)
   #pair1person2 w pair2person2;
-  d4=data.frame(Resp1=d2$Resp1,Resp2=d1$Resp2,HR1=d2$HR1,HR2=d1$HR2,Resp1S=d2$Resp1S,Resp2S=d1$Resp2S,HR1S=d2$HR1S,HR2S=d1$HR2S)
+  d4=data.frame(Resp1=d2$Resp1,Resp2=d1$Resp2,HR1=d2$HR1,HR2=d1$HR2,Resp1S=d2$Resp1,Resp2S=d1$Resp2,HR1S=d2$HR1,HR2S=d1$HR2)
   
   #pair1person1 w pair2person1;
-  d5=data.frame(Resp1=d1$Resp1,Resp2=d2$Resp1,HR1=d1$HR1,HR2=d2$HR1,Resp1S=d1$Resp1S,Resp2S=d2$Resp1S,HR1S=d1$HR1S,HR2S=d2$HR1S)
+  d5=data.frame(Resp1=d1$Resp1,Resp2=d2$Resp1,HR1=d1$HR1,HR2=d2$HR1,Resp1S=d1$Resp1,Resp2S=d2$Resp1,HR1S=d1$HR1,HR2S=d2$HR1)
   #pair1person2 w pair2person2
-  d6=data.frame(Resp1=d2$Resp2,Resp2=d1$Resp2,HR1=d2$HR2,HR2=d1$HR2,Resp1S=d2$Resp2S,Resp2S=d1$Resp2S,HR1S=d2$HR2S,HR2S=d1$HR2S)
+  d6=data.frame(Resp1=d2$Resp2,Resp2=d1$Resp2,HR1=d2$HR2,HR2=d1$HR2,Resp1S=d2$Resp2,Resp2S=d1$Resp2,HR1S=d2$HR2,HR2S=d1$HR2)
   
   #Make filenames that tells which pairs have been mixed
   file3=paste0("Study1_SurrogateGroup",SurrogateList$a[i],"&",SurrogateList$b[i],"a_",co,".csv")
@@ -509,10 +512,10 @@ for (co in c("Synchronous","TurnTaking")){ #loop through a list of condintions
   file6=paste0("Study1_SurrogateGroup",SurrogateList$a[i],"&",SurrogateList$b[i],"d_",co,".csv")
   
   #write csv files
-  write_csv(d3,file.path("surrogate",file3))
-  write_csv(d4,file.path("surrogate",file4))
-  write_csv(d5,file.path("surrogate",file5))
-  write_csv(d6,file.path("surrogate",file6))
+  write.csv(d3,file.path("surrogate",file3))
+  write.csv(d4,file.path("surrogate",file4))
+  write.csv(d5,file.path("surrogate",file5))
+  write.csv(d6,file.path("surrogate",file6))
   }
 }
 
@@ -526,12 +529,20 @@ for (co in c("Synchronous","TurnTaking")){ #loop through a list of condintions
  - N.B: would it make sense to include surrogate pairs? and if so how? what would that tell you?
  
 ```{r}
+final_df = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/final_df")
+
+shuffle_df <- read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/shuffle_df")
+
 shuffle_df$typePairs <- "shuffled" 
 final_df$typePairs <- "real"
 
 
 shuffle_final_df <- rbind(final_df, shuffle_df)
 
+model_resp_L <- lmer(resp_L~typePairs + trial + (1+trial|group), data = shuffle_final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
+model_HR_L <- lmer(HR_L~typePairs + trial + (1+trial|group), data = shuffle_final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
+summary(model_resp_L)
+summary(model_HR_L)
 
 resp_box <- ggplot(shuffle_final_df, aes(shuffle_final_df$typePairs, shuffle_final_df$resp_L)) + geom_point() + geom_boxplot() + labs(title = "Respiration data")
 
