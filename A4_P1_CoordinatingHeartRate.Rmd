@@ -335,6 +335,7 @@ write.csv(basic_df, file = "basic_df")
 ```{r}
 #Use the few that worked to find optimal parameters
 
+setwd("~/Desktop/R Saves Semester 3/Assignment 4")
 basic_df = read.csv("Preproc_data/basic_df")
 resp_delay = median(basic_df$respDelay,na.rm = TRUE)
 resp_embed = median(basic_df$respEmbed,na.rm = TRUE)
@@ -349,6 +350,7 @@ parameter_df = data.frame(resp_delay,resp_embed,resp_radius,HR_delay,HR_embed,HR
 
 
 ```{r}
+#CRQA using the parameters
 setwd("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data")
 files_preproc = list.files(path=".",pattern = "Study", recursive = FALSE)
 
@@ -603,8 +605,8 @@ for (co in c("Synchronous","TurnTaking","Conversation")){ #loop through a list o
 ```{r}
 #CRQA on surrogate pairs
 
-setwd("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/surrogate")
-files_preproc = list.files(path=".")
+wd = setwd("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/surrogate")
+files_preproc = list.files(path=wd,pattern = "Study", recursive = FALSE)
 
 surrogate_df = NULL
 
@@ -618,8 +620,8 @@ n = 1
 for (i in files_preproc) {
   
   study[n] = substr(i,6,6)
-  group_temp = str_extract(i, "G\\d+")
-  group[n] = str_extract(group_temp, "\\d")
+  group_temp = str_extract(i, "Group\\d+")
+  group[n] = str_extract(group_temp, "\\d+")
   trial_temp = str_extract(i, "T\\d")
   trial[n] = str_extract(trial_temp, "\\d")
   condition_temp = str_extract(i, c("Turn", "Conv", "Sync"))
@@ -645,11 +647,10 @@ for (i in files_preproc) {
 
 write.csv(surrogate_df, file = "surrogate_df")
 ```
-### Testing effects of conditions
- - make a (probably underpowered) mixed model testing effects of the different conditions on heart rate and respiration coordination
- - N.B: would it make sense to include surrogate pairs? and if so how? what would that tell you?
- 
+
 ```{r}
+#Test if typepairs can predict respiration coordination and HR cordination - for shuffled
+
 final_df = read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/final_df")
 
 shuffle_df <- read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/shuffle_df")
@@ -661,8 +662,9 @@ final_df$typePairs <- "real"
 shuffle_final_df <- rbind(final_df, shuffle_df)
 
 model_resp_L <- lmerTest::lmer(resp_L~typePairs + trial + (1+trial|group), data = shuffle_final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
-model_HR_L <- lmerTest::lmer(HR_L~typePairs + trial + (1+trial|group), data = shuffle_final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
 summary(model_resp_L)
+
+model_HR_L <- lmerTest::lmer(HR_L~typePairs + trial + (1+trial|group), data = shuffle_final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
 summary(model_HR_L)
 
 resp_box <- ggplot(shuffle_final_df, aes(shuffle_final_df$typePairs, shuffle_final_df$resp_L)) + geom_point() + geom_boxplot() + labs(title = "Respiration data")
@@ -671,19 +673,70 @@ HR_box <- ggplot(shuffle_final_df, aes(shuffle_final_df$typePairs, shuffle_final
 
 grid.arrange(resp_box,HR_box, ncol = 2)
 
-cond_resp = ggplot(final_df, aes(x = final_df$condition, y = final_df$resp_L)) + geom_point() + geom_boxplot()+ labs(title = "Respiration data")
+#Test if typepairs can predict respiration coordination and HR cordination - for surrogate
 
+surrogate_df <- read.csv("~/Desktop/R Saves Semester 3/Assignment 4/Preproc_data/surrogate/surrogate_df")
+
+surrogate_df$typePairs <- "surrogate"
+
+surrogate_final_df <- rbind(final_df, surrogate_df)
+
+
+
+model_resp_L <- lmerTest::lmer(resp_L~typePairs + (1|group), data = surrogate_final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
+summary(model_resp_L)
+r.squaredGLMM(model_resp_L)
+
+model_HR_L <- lmerTest::lmer(HR_L~typePairs + (1|group), data = surrogate_final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
+summary(model_HR_L)
+r.squaredGLMM(model_HR_L)
+
+
+```
+
+
+### Testing effects of conditions
+ - make a (probably underpowered) mixed model testing effects of the different conditions on heart rate and respiration coordination
+ - N.B: would it make sense to include surrogate pairs? and if so how? what would that tell you?
+ 
+```{r}
+#Plots to check if condition in real pairs predict coordination
+cond_resp = ggplot(final_df, aes(x = final_df$condition, y = final_df$resp_L)) + geom_point() + geom_boxplot()+ labs(title = "Respiration data")
 
 cond_HR = ggplot(final_df, aes(x = final_df$condition, y = final_df$HR_L)) + geom_point() + geom_boxplot()+labs(title = "Heart rate data")
 
-
 grid.arrange(cond_resp,cond_HR, ncol = 2)
+
+#Models to test the effect of condition on coordination
+model_resp_L_condition <- lmerTest::lmer(resp_L~condition + trial + (1+trial|group), data = final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
+summary(model_resp_L)
+r.squaredGLMM(model_resp_L)
+
+model_HR_L_condition <- lmerTest::lmer(HR_L~condition + trial + (1+trial|group), data = final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
+summary(model_HR_L)
+r.squaredGLMM(model_HR_L)
+
+
+
+```
+
 
 ### Effects of respiration coordination on heart rate coordination
  - describe how you would test those.
  - Optional: run the models and report them
  
 ```{r}
+#We would make a lmer model to test if HR_L can be predicted by resp_L and random effect of group|trial 
+
+
+model_fixedrandomeffects = lmerTest::lmer(HR_L ~ resp_L + trial + (1|group), data = final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
+summary(model_model_fixedrandomeffects)
+r.squaredGLMM(model_fixedrandomeffects)
+
+
+model_interaction = lmerTest::lmer(HR_L ~ resp_L * trial + (1|group), data = final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
+summary(model_interaction)
+r.squaredGLMM(model_interaction)
 
 ```
 
