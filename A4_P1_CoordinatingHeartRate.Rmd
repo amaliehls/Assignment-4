@@ -730,7 +730,7 @@ r.squaredGLMM(model_HR_L)
 
 
 model_fixedrandomeffects = lmerTest::lmer(HR_L ~ resp_L + trial + (1|group), data = final_df, control = lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE))
-summary(model_model_fixedrandomeffects)
+summary(model_fixedrandomeffects)
 r.squaredGLMM(model_fixedrandomeffects)
 
 
